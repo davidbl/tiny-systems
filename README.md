@@ -16,6 +16,3 @@ The presentations and documents available in the repository are available under 
 Commons Attribution 2.5 license.  This means that you can copy, distribute and remix the work,
 but you must attribute the work to the author (by providing a link to the original source
 and my name). For more information [see the full license details](http://creativecommons.org/licenses/by/2.5/).
-
-
-testing
