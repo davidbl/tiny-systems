@@ -47,14 +47,26 @@ let rec evaluate (ctx:VariableContext) e =
           | "+" -> ValNum(n1 + n2)
           | "*" -> ValNum(n1 * n2)
           | _ -> failwith "unsupported binary operator"
+      | _, _ -> failwith "closures are not supported"
   | Variable(v) ->
       match ctx.TryFind v with 
       | Some res -> res
       | _ -> failwith ("unbound variable: " + v)
 
   // NOTE: You have the following two from before
-  | Unary(op, e) -> failwith "implemented in step 2"
-  | If(econd, etrue, efalse) -> failwith "implemented in step 2"
+  | Unary(op, e) ->
+    let v = evaluate ctx e
+    match v with
+    | ValNum n ->
+      match op with
+      | "-" -> ValNum(-n)
+      | _ -> failwith "unsupported unary operator"
+    | _ -> failwith "closures are not supported"
+  | If(econd, etrue, efalse) ->
+    let v1 = evaluate ctx econd
+    match v1 with
+    | ValNum 1 -> evaluate ctx etrue
+    | _ -> evaluate ctx efalse
   
   | Lambda(v, e) ->
       // TODO: Evaluate a lambda - create a closure value
