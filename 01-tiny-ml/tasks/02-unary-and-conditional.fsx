@@ -34,8 +34,8 @@ let rec evaluate (ctx:VariableContext) e =
       let v1 = evaluate ctx e1
       let v2 = evaluate ctx e2
       match v1, v2 with 
-      | ValNum n1, ValNum n2 -> 
-          match op with 
+      | ValNum n1, ValNum n2 ->
+          match op with
           | "+" -> ValNum(n1 + n2)
           | "*" -> ValNum(n1 * n2)
           | _ -> failwith "unsupported binary operator"
@@ -44,14 +44,25 @@ let rec evaluate (ctx:VariableContext) e =
       | Some res -> res
       | _ -> failwith ("unbound variable: " + v)
   | Unary(op, e) ->
-      // TODO: Implement the case for 'Unary' here!
-      failwith "not implemented"
-  // TODO: Add the correct handling of 'If' here!
-
+      let v = evaluate ctx e
+      match v with
+      | ValNum n ->
+        match op with
+        | "-" -> ValNum(-n)
+        | _ -> failwith "unsupported unary operator"
+  | If(e1, e2, e3) ->
+    let v1 = evaluate ctx e1
+    match v1 with
+    | ValNum 1 -> evaluate ctx e2
+    | _ -> evaluate ctx e3
 
 // ----------------------------------------------------------------------------
 // Test cases
 // ----------------------------------------------------------------------------
+
+let myAssert actual expected =
+ if (actual = expected) then printfn $"Success: {actual} = {expected}"
+ else failwith $"expected {actual} to equal {expected}"
 
 // Arithmetic with unary operator: (1*2) + (-(-20 * 2))
 let euo = 
@@ -59,7 +70,9 @@ let euo =
     Binary("*", Constant(1), Constant(2)),
     Unary("-", Binary("*", Constant(-20), Constant(2)))
   )
-evaluate Map.empty euo
+let s = evaluate Map.empty euo
+let expected = ValNum 42
+myAssert s expected
 
 // Conditional expression: if 1 then 42 else 0
 let eif1 = 
@@ -67,7 +80,7 @@ let eif1 =
     Constant(42), 
     Constant(0)
   )
-evaluate Map.empty eif1
+myAssert (evaluate Map.empty eif1) expected
 
 // Conditional expression: if 5+(-4) then 21*2 else 0
 let eif2 = 
@@ -75,7 +88,7 @@ let eif2 =
     Binary("*", Constant(21), Constant(2)), 
     Constant(0)
   )
-evaluate Map.empty eif2
+myAssert (evaluate Map.empty eif2) expected
 
 // Conditional expression: if 5+4 then 0 else 21*2 
 let eif3 = 
@@ -83,6 +96,6 @@ let eif3 =
     Constant(0),
     Binary("*", Constant(21), Constant(2))
   )
-evaluate Map.empty eif3
+myAssert (evaluate Map.empty eif3) expected
 
-
+printfn "Success!!"
