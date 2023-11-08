@@ -67,16 +67,19 @@ let rec evaluate (ctx:VariableContext) e =
     match v1 with
     | ValNum 1 -> evaluate ctx etrue
     | _ -> evaluate ctx efalse
-  
-  | Lambda(v, e) ->
-      // TODO: Evaluate a lambda - create a closure value
-      failwith "not implemented"
+
+  | Lambda(v, e) -> ValClosure(v, e, ctx)
 
   | Application(e1, e2) ->
       // TODO: Evaluate a function application. Recursively
       // evaluate 'e1' and 'e2'; 'e1' must evaluate to a closure.
       // You can then evaluate the closure body.
-      failwith "not implemented"
+      match e1 with
+      | Lambda(v, exp) ->
+        let arg = evaluate ctx e2
+        let ctx1 = Map.add v arg ctx
+        evaluate ctx1 exp
+      | _ -> failwith "unsupported function application (first arg should be a lambda)"
 
 // ----------------------------------------------------------------------------
 // Test cases
@@ -86,7 +89,8 @@ let rec evaluate (ctx:VariableContext) e =
 //   (fun x -> x * 2) 
 let ef1 = 
   Lambda("x", Binary("*", Variable("x"), Constant(2)))
-evaluate Map.empty ef1
+let s = evaluate Map.empty ef1
+printfn "%A" s
 
 // Basic function calls (should return number)
 //   (fun x -> x * 2) 21
@@ -95,7 +99,8 @@ let ef2 =
     Lambda("x", Binary("*", Variable("x"), Constant(2))),
     Constant(21)
   )
-evaluate Map.empty ef2
+let t = evaluate Map.empty ef2
+printfn "%A" t
 
 // Wrong function call (the first argument is not a function)
 //   21 (fun x -> x * 2)
@@ -104,7 +109,8 @@ let ef3 =
     Constant(21),
     Lambda("x", Binary("*", Variable("x"), Constant(2)))
   )
-evaluate Map.empty ef3
+try evaluate Map.empty ef3
+with :? System.Exception  as ex -> printfn "Exception handled: %s" ex.Message; ValNum(0)
 
 // Wrong binary operator (it is now possible to apply '+'
 // to functions; this makes no sense and should fail!)
@@ -114,4 +120,5 @@ let ef4 =
     Constant(21),
     Lambda("x", Binary("*", Variable("x"), Constant(2)))  
   )
-evaluate Map.empty ef4
+try evaluate Map.empty ef4
+with :? System.Exception  as ex -> printfn "Exception handled: %s" ex.Message; ValNum(0)
